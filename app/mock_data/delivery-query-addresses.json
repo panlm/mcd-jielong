@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "code": 200,
+  "message": "请求成功",
+  "datetime": "2026-10-14 10:52:47",
+  "traceId": "demo-trace",
+  "data": {
+    "addresses": [
+      {
+        "addressId": "demo-addr-1",
+        "contactName": "示例",
+        "phone": "138****0000",
+        "fullAddress": "上海市浦东新区示例路1号 示例大厦21楼"
+      },
+      {
+        "addressId": "demo-addr-2",
+        "contactName": "示例",
+        "phone": "138****0000",
+        "fullAddress": "上海市浦东新区示例路1号 示例大厦3楼"
+      }
+    ]
+  }
+}

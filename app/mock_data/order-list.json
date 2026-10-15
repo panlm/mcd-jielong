@@ -1,0 +1,77 @@
+{
+  "success": true,
+  "code": 200,
+  "message": "请求成功",
+  "datetime": "2026-10-14 11:28:58",
+  "traceId": "demo-trace",
+  "data": {
+    "list": [
+      {
+        "orderId": "DEMO46221886",
+        "orderType": "2",
+        "createTime": "2026-10-14 11:26:28",
+        "beType": "2",
+        "beCode": "145032602",
+        "storeCode": "1450326",
+        "storeName": "麦当劳上海陆家嘴前滩中心餐厅",
+        "orderStatus": "订单已取消",
+        "orderProductList": [
+          {
+            "productCode": "9900003041",
+            "productName": "麦香鸡中套餐",
+            "quantity": 20,
+            "comboItemList": [
+              {
+                "productCode": "901450",
+                "name": "麦香鸡",
+                "quantity": 1
+              },
+              {
+                "productCode": "501205",
+                "name": "中薯条",
+                "quantity": 1
+              },
+              {
+                "productCode": "903050",
+                "name": "可口可乐中杯",
+                "quantity": 1
+              }
+            ]
+          },
+          {
+            "productCode": "901401",
+            "productName": "麦乐鸡5块",
+            "quantity": 15,
+            "comboItemList": []
+          },
+          {
+            "productCode": "901000",
+            "productName": "汉堡包",
+            "quantity": 15,
+            "comboItemList": []
+          }
+        ],
+        "realTotalAmount": "1142.5"
+      },
+      {
+        "orderId": "DEMO99221016",
+        "orderType": "2",
+        "createTime": "2026-10-14 11:25:43",
+        "beType": "2",
+        "beCode": "145032602",
+        "storeCode": "1450326",
+        "storeName": "麦当劳上海陆家嘴前滩中心餐厅",
+        "orderStatus": "订单已取消",
+        "orderProductList": [
+          {
+            "productCode": "901000",
+            "productName": "汉堡包",
+            "quantity": 1,
+            "comboItemList": []
+          }
+        ],
+        "realTotalAmount": "22.1"
+      }
+    ]
+  }
+}

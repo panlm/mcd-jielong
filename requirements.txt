@@ -1,0 +1,6 @@
+# Pinned to the versions the test suite runs against (direct dependencies only).
+fastapi==0.143.0
+uvicorn==0.54.0
+httpx==0.28.1
+boto3==1.43.113
+segno==1.6.6

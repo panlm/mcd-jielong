@@ -1,0 +1,28 @@
+[Unit]
+Description=McD jielong (real)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Single-process only: EXACTLY ONE uvicorn process per DB. Do NOT add --workers: the startup sweep
+# moves ORDERING -> UNCERTAIN and assumes no other process is mid-order.
+Type=simple
+User=mcdjl
+Group=mcdjl
+WorkingDirectory=/opt/mcd-jielong/current
+Environment=MCD_MODE=real
+Environment=MCD_DB=/var/lib/mcd-jielong/app.db
+Environment=MCD_PUBLIC_BASE_URL=https://mcd.aws.panlm.click
+Environment=AWS_REGION=ap-northeast-1
+Environment=AWS_DEFAULT_REGION=ap-northeast-1
+ExecStart=/opt/mcd-jielong/venv/bin/uvicorn app.main:app_from_env --factory --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-access-log
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/mcd-jielong
+
+[Install]
+WantedBy=multi-user.target

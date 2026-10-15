@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "code": 200,
+  "message": "请求成功",
+  "datetime": "2026-10-14 11:26:04",
+  "traceId": "demo-trace",
+  "data": {
+    "cancelResult": true,
+    "orderId": "DEMO99221016"
+  }
+}

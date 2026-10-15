@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "code": 200,
+  "message": "请求成功",
+  "datetime": "2026-10-14 11:01:31",
+  "traceId": "demo-trace",
+  "data": {
+    "productOriginalPrice": 3350,
+    "productPrice": 3350,
+    "deliveryOriginalPrice": 600,
+    "deliveryPrice": 600,
+    "packingOriginalPrice": 190,
+    "packingPrice": 190,
+    "originalPrice": 4140,
+    "discount": 0,
+    "price": 4140,
+    "productList": [
+      {
+        "productCode": "9900003041",
+        "productName": "麦香鸡中套餐",
+        "quantity": 1,
+        "originalSubtotal": 3350,
+        "subtotal": 3350
+      },
+      {
+        "productCode": "920174",
+        "productName": "打包服务费",
+        "quantity": 19,
+        "originalSubtotal": 190,
+        "subtotal": 0
+      }
+    ]
+  }
+}

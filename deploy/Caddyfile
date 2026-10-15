@@ -1,0 +1,29 @@
+mcd.aws.panlm.click {
+	tls {
+		issuer acme {
+			disable_http_challenge
+		}
+	}
+
+	# No `log` directive on purpose: Caddy writes no access log by default. The host key
+	# travels in the #k= fragment and a POST body, so it is not in URLs any more; an old
+	# /host?k= link would still put it in a query string.
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		X-Frame-Options DENY
+		# web/ has no inline script or style; product photos come from menu-img.mcd.cn and the
+		# pay QR is a data: URL
+		Content-Security-Policy "default-src 'self'; img-src 'self' https://menu-img.mcd.cn data:; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+	}
+
+	redir /demo /demo/ 308
+	handle_path /demo/* {
+		reverse_proxy 127.0.0.1:8001
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8000
+	}
+}

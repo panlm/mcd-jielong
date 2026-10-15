@@ -1,0 +1,35 @@
+[Unit]
+Description=McD jielong (demo)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Single-process only: EXACTLY ONE uvicorn process per DB. Do NOT add --workers: the startup sweep
+# moves ORDERING -> UNCERTAIN and assumes no other process is mid-order.
+#
+# Isolation from the real instance on the same host (I3). Demo mode has no token in its
+# environment and never loads the SSM code path; on top of that:
+#   - its own system user (deploy.sh creates mcdjl-demo), so the real DB dir (750 mcdjl) is
+#     not readable, and InaccessiblePaths hides that directory from this unit entirely;
+#   - IPAddressDeny blocks the EC2 instance metadata service, so this process cannot get the
+#     instance role's credentials (no SSM, so no token and no host key).
+Type=simple
+User=mcdjl-demo
+Group=mcdjl-demo
+WorkingDirectory=/opt/mcd-jielong/current
+Environment=MCD_MODE=demo
+Environment=MCD_DB=/var/lib/mcd-jielong-demo/app.db
+Environment=MCD_PUBLIC_BASE_URL=https://mcd.aws.panlm.click/demo
+ExecStart=/opt/mcd-jielong/venv/bin/uvicorn app.main:app_from_env --factory --host 127.0.0.1 --port 8001 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/mcd-jielong-demo
+InaccessiblePaths=/var/lib/mcd-jielong
+IPAddressDeny=169.254.169.254 fd00:ec2::254
+
+[Install]
+WantedBy=multi-user.target

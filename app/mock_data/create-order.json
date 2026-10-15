@@ -1,0 +1,50 @@
+{
+  "success": true,
+  "code": 200,
+  "message": "请求成功",
+  "datetime": "2026-10-14 11:25:43",
+  "traceId": "demo-trace",
+  "data": {
+    "orderId": "DEMO99221016",
+    "payId": "DEMOPAY63586246",
+    "payH5Url": "https://example.invalid/pay/demo",
+    "orderDetail": {
+      "orderId": "DEMO99221016",
+      "orderStatus": "待支付",
+      "status": "10",
+      "storeName": "麦当劳上海陆家嘴前滩中心餐厅",
+      "storeAddress": "东育路255弄9号一层103室",
+      "orderProductList": [
+        {
+          "productName": "汉堡包",
+          "productImage": "https://menu-img.mcd.cn/pcm/prod/menu/20260309/product/MS_901000_320.png",
+          "quantity": 1,
+          "price": "15",
+          "comboItemList": []
+        }
+      ],
+      "totalAmount": "22.1",
+      "realTotalAmount": "22.1",
+      "totalDiscountAmount": "0",
+      "couponList": [],
+      "deliveryInfo": {
+        "deliveryType": "麦乐送",
+        "deliveryAddress": "上海市浦东新区示例路1号",
+        "addressDetail": "示例大厦21楼",
+        "customerNickname": "示例",
+        "mobilePhone": "138****0000",
+        "expectDeliveryTime": "立即送出"
+      },
+      "createTime": "2026-10-14 11:25:43",
+      "deliveryPrice": "6",
+      "realDeliveryPrice": "6",
+      "realPackingFeeTotalPrice": "1.1",
+      "needTableware": false,
+      "productPrice": "15",
+      "pickupCode": "",
+      "expirePayTime": "2026-10-14 11:40:43",
+      "payId": "DEMOPAY63586246",
+      "remark": ""
+    }
+  }
+}

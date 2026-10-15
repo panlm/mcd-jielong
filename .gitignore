@@ -1,0 +1,9 @@
+.superpowers/
+__pycache__/
+*.pyc
+.venv/
+*.db
+*.sqlite
+.env
+tests/.pii-denylist.txt
+deploy/deploy.env
