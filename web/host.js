@@ -69,7 +69,7 @@
 
   // Copy: Clipboard API, falling back to selecting a readonly input.
   function copyBox(text) {
-    var wrap = el('div', 'box');
+    var wrap = el('div', 'box copy');
     var inp = el('input'); inp.type = 'text'; inp.readOnly = true; inp.value = text;
     var status = el('span', 'muted');
     var btn = el('button', 'btn2', '复制'); btn.type = 'button';
@@ -85,8 +85,10 @@
         navigator.clipboard.writeText(text).then(function () { status.textContent = '已复制'; }, fallback);
       } else { fallback(); }
     };
-    wrap.appendChild(inp);
-    wrap.appendChild(btn);
+    var line = el('div', 'copy-line');
+    line.appendChild(inp);
+    line.appendChild(btn);
+    wrap.appendChild(line);
     wrap.appendChild(status);
     return wrap;
   }
@@ -118,24 +120,27 @@
   // ================= create view =================
   function createView() {
     clear(root);
-    root.appendChild(el('h1', null, '新建加班补给'));
+    var hero = el('div', 'hero');
+    hero.appendChild(el('h1', null, '🍔 新建加班补给'));
+    hero.appendChild(el('div', 'sub', '选好门店和截单时间，生成链接发到群里'));
+    root.appendChild(hero);
     var addresses = [], stores = [], pickedStore = null;
 
     var addrBox = el('div', 'box');
-    addrBox.appendChild(el('div', 'muted', '送到'));
-    var sel = el('select'); sel.style.width = '100%'; sel.style.padding = '8px';
+    addrBox.appendChild(el('div', 'label', '送到'));
+    var sel = el('select');
     addrBox.appendChild(sel);
     root.appendChild(addrBox);
 
     var storeBox = el('div', 'box');
-    storeBox.appendChild(el('div', 'muted', '门店（能送到的）'));
+    storeBox.appendChild(el('div', 'label', '门店（能送到的）'));
     var storeList = el('div');
     storeBox.appendChild(storeList);
     root.appendChild(storeBox);
 
     var form = el('div', 'box');
     function field(label, input) {
-      var r = el('div'); r.appendChild(el('div', 'muted', label)); r.appendChild(input); return r;
+      var r = el('label', 'field'); r.appendChild(el('span', 'label', label)); r.appendChild(input); return r;
     }
     var title = el('input'); title.type = 'text'; title.maxLength = 20; title.value = '我请客';
     var label = el('input'); label.type = 'text'; label.maxLength = 30;
@@ -143,8 +148,10 @@
     var cap = el('input'); cap.type = 'text'; cap.inputMode = 'decimal'; cap.value = '40'; cap.placeholder = '留空 = 不限';
     form.appendChild(field('显示名称', title));
     form.appendChild(field('地址简称（群友看到的）', label));
-    form.appendChild(field('截单时间（北京时间）', cutoff));
-    form.appendChild(field('每人上限（元，可留空）', cap));
+    var pair = el('div', 'pair');
+    pair.appendChild(field('截单时间（北京时间）', cutoff));
+    pair.appendChild(field('每人上限（元，可留空）', cap));
+    form.appendChild(pair);
     root.appendChild(form);
 
     var err = el('div', 'err');
@@ -167,13 +174,15 @@
         stores = res.body;
         if (!stores.length) storeList.appendChild(el('p', 'muted', '这个地址没有能送到的门店'));
         stores.forEach(function (s, i) {
-          var row = el('label'); row.style.display = 'block'; row.style.padding = '4px 0';
+          var row = el('label', 'store');
           var r = el('input'); r.type = 'radio'; r.name = 'store';
           r.onchange = function () { pickedStore = s; };
           row.appendChild(r);
-          row.appendChild(document.createTextNode(' ' + s.name + ' '));
-          row.appendChild(el('span', 'muted', '营业 ' + s.open + '–' + s.close));
-          if (s.today) row.appendChild(el('div', 'muted', '今天：' + s.today));
+          var info = el('div', 'info');
+          info.appendChild(el('div', 'nm', s.name));
+          info.appendChild(el('div', 'muted', '营业 ' + s.open + '–' + s.close));
+          if (s.today) info.appendChild(el('div', 'muted', '今天：' + s.today));
+          row.appendChild(info);
           storeList.appendChild(row);
           if (i === 0) { r.checked = true; pickedStore = s; }
         });
@@ -214,9 +223,10 @@
         busy = false; go.disabled = false;
         if (res.status !== 201) { err.textContent = errText(res); return; }
         clear(result);
+        result.className = 'done';
         result.appendChild(el('p', null, '已生成，把这个链接贴到群里：'));
         result.appendChild(copyBox(res.body.join_url));
-        var manage = el('a', null, '去管理页（截单 / 下单）');
+        var manage = el('a', 'btn2 link', '去管理页（截单 / 下单）');
         manage.href = 'host?sid=' + encodeURIComponent(res.body.sid);
         result.appendChild(manage);
       }).catch(function () { busy = false; go.disabled = false; err.textContent = '网络不太好，再试一次'; });
@@ -227,20 +237,23 @@
   function manageView() {
     clear(root);
     var data = null, busy = false, msg = '', headBuilt = false;
-    var elHead = el('div'), elAct = el('div'), elList = el('div'), elOrder = el('div');
+    var elHead = el('div'), elAct = el('div', 'acts'), elList = el('div'), elOrder = el('div');
     elOrder.id = 'order-section'; // quote / confirm / pay / uncertain / cancel
     [elHead, elAct, elList, elOrder].forEach(function (n) { root.appendChild(n); });
 
     function renderHead() {
       clear(elHead);
-      elHead.appendChild(el('h1', null, '管理页 · ' + data.title));
-      var line = el('div', 'muted', data.store_name + ' → ' + data.address_label + ' · 截单 ' +
-        shHM(Date.parse(data.cutoff_at)));
-      if (data.cap_fen) line.appendChild(document.createTextNode(' · 每人 ≤ ' + yuan(data.cap_fen)));
-      elHead.appendChild(line);
+      var hero = el('div', 'hero');
+      hero.appendChild(el('h1', null, '管理页 · ' + data.title));
+      hero.appendChild(el('div', 'sub', data.store_name + ' → ' + data.address_label));
+      var tags = el('div', 'tags');
       var st = { open: '接龙中', locked: '已截单', ordering: '下单中', uncertain: '结果确认中',
         ordered: '已下单', cancelled: '已取消' }[data.state] || data.state;
-      elHead.appendChild(el('div', 'hot', st));
+      tags.appendChild(el('span', 'tag hot', st));
+      tags.appendChild(el('span', 'tag', '截单 ' + shHM(Date.parse(data.cutoff_at))));
+      if (data.cap_fen) tags.appendChild(el('span', 'tag', '每人 ≤ ' + yuan(data.cap_fen)));
+      hero.appendChild(tags);
+      elHead.appendChild(hero);
       var link = location.origin + location.pathname.replace(/host\/?$/, '') + 'j/' + encodeURIComponent(sid);
       elHead.appendChild(copyBox(link));
     }
@@ -260,21 +273,24 @@
     function renderList() {
       clear(elList);
       var box = el('div', 'box');
-      var top = el('div', 'row');
+      var top = el('div', 'row head');
       top.appendChild(el('b', null, '接龙（' + data.count + ' 人）'));
       top.appendChild(el('span', 'muted', '合计 ' + yuan(data.total_fen)));
       box.appendChild(top);
-      if (!data.entries.length) box.appendChild(el('p', 'muted', '还没有人接龙'));
+      if (!data.entries.length) box.appendChild(el('p', 'muted empty', '还没有人接龙'));
       data.entries.forEach(function (e) {
         var row = el('div', 'entry');
-        row.appendChild(el('span', 'who', e.seq + ' ' + e.name));
+        row.appendChild(el('i', 'seq', String(e.seq)));
+        var body = el('div', 'body');
+        body.appendChild(el('div', 'who', e.name));
         var what = el('div', 'what');
         what.appendChild(document.createTextNode(e.items.map(function (r) {
           return r.name + (r.qty > 1 ? ' ×' + r.qty : '');
         }).join(' + ')));
         if (e.note) what.appendChild(el('div', 'note', '备注：' + e.note));
-        row.appendChild(what);
-        row.appendChild(el('span', null, yuan(e.subtotal_fen)));
+        body.appendChild(what);
+        row.appendChild(body);
+        row.appendChild(el('span', 'amt', yuan(e.subtotal_fen)));
         if (data.raw_state === 'open' || data.raw_state === 'locked') {
           var del = el('button', 'btn2 del', '删除'); del.type = 'button'; del.disabled = busy;
           del.onclick = function () { removeEntry(e); };
@@ -400,12 +416,13 @@
     }
 
     function quoteBox(q) {
-      var box = el('div', 'box');
+      var box = el('div', 'box quote');
       (q.lines || []).forEach(function (l) {
         box.appendChild(line(l.name + (l.qty > 1 ? ' ×' + l.qty : ''), l.subtotal_fen));
       });
       var bd = q.breakdown || {};
-      box.appendChild(line('商品', bd.product_fen));
+      var sub = line('商品', bd.product_fen); sub.className += ' sep';
+      box.appendChild(sub);
       box.appendChild(line('配送费', bd.delivery_fen));
       box.appendChild(line('打包费', bd.packing_fen));
       if (bd.discount_fen) {
@@ -421,10 +438,10 @@
     }
 
     function couponList() {
-      var wrap = el('div'); wrap.style.padding = '4px 0';
-      wrap.appendChild(el('div', 'muted', '优惠券（选了会重新算价）'));
+      var wrap = el('div', 'opts');
+      wrap.appendChild(el('div', 'label', '优惠券（选了会重新算价）'));
       function opt(label, c) {
-        var l = el('label'); l.style.display = 'block'; l.style.padding = '2px 0';
+        var l = el('label', 'opt');
         var r = el('input'); r.type = 'radio'; r.name = 'coupon'; r.disabled = ord.busy;
         r.checked = c ? !!ord.coupon && ord.coupon.id === c.id && ord.coupon.code === c.code : !ord.coupon;
         r.onchange = function () {
@@ -442,7 +459,7 @@
 
     function lockedView(box) {
       box.appendChild(el('b', null, '算价下单'));
-      var tw = el('label'); tw.style.display = 'block'; tw.style.padding = '4px 0';
+      var tw = el('label', 'opt');
       var cb = el('input'); cb.type = 'checkbox'; cb.checked = ord.need; cb.disabled = ord.busy;
       cb.onchange = function () { ord.need = cb.checked; ord.quote = null; ord.note = ''; renderOrder(); };
       tw.appendChild(cb); tw.appendChild(document.createTextNode(' 需要餐具'));
@@ -517,12 +534,11 @@
         if (typeof url === 'string' && url.indexOf('https://') === 0) {
           var payLink = el('a', 'btn', '去支付'); payLink.href = url;
           payLink.target = '_blank'; payLink.rel = 'noopener noreferrer';
-          payLink.style.textAlign = 'center'; payLink.style.textDecoration = 'none';
           box.appendChild(payLink);
           var img = el('img', 'qr'); img.alt = '支付二维码'; img.width = 180; img.height = 180;
           loadQr(img);
           box.appendChild(img);
-          box.appendChild(el('div', 'muted', '也可以用另一台手机扫码支付'));
+          box.appendChild(el('div', 'muted center', '也可以用另一台手机扫码支付'));
         } else {
           box.appendChild(el('div', 'banner', '没有拿到支付链接，请去麦当劳 App 支付（订单号 ' +
             (data.order_id || '') + '）'));
@@ -530,8 +546,8 @@
       }
       box.appendChild(button('btn2', '刷新状态', doRefreshStatus));
       if (data.state !== 'ordered') return;
-      var c = el('div'); c.style.marginTop = '10px';
-      var sel = el('select'); sel.disabled = ord.busy; sel.style.padding = '6px'; sel.style.marginRight = '8px';
+      var c = el('div', 'cancel');
+      var sel = el('select'); sel.disabled = ord.busy;
       var o0 = el('option', null, '选择取消原因'); o0.value = ''; sel.appendChild(o0);
       REASONS.forEach(function (r) { var o = el('option', null, r[1]); o.value = r[0]; sel.appendChild(o); });
       sel.value = ord.reason;

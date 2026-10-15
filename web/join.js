@@ -82,19 +82,19 @@
   }
 
   // ---- sections (rebuilt independently so typing is not interrupted) ----
-  var elHead = el('div'), elList = el('div'), elOrder = el('div'), elClosed = el('div');
-  var elSel, elMenu, elTabs, elItems, elBtn, elErr, elName, elNote, elMineBox;
+  var elHead = el('div', 'hero'), elList = el('div'), elOrder = el('div'), elClosed = el('div');
+  var elSel, elTabs, elItems, elBtn, elErr, elName, elNote, elMineBox, elSumAmt, elSumTip;
 
   function renderHead() {
     clear(elHead);
     elHead.appendChild(el('h1', null, '🍔 ' + data.title));
-    var line = el('div', 'muted');
-    line.appendChild(document.createTextNode(data.store_name + ' → ' + data.address_label + ' · '));
-    var cd = el('span', 'hot');
+    elHead.appendChild(el('div', 'sub', data.store_name + ' → ' + data.address_label));
+    var tags = el('div', 'tags');
+    var cd = el('span', 'tag hot');
     cd.id = 'countdown';
-    line.appendChild(cd);
-    if (data.cap_fen) line.appendChild(document.createTextNode(' · 每人 ≤ ' + yuan(data.cap_fen)));
-    elHead.appendChild(line);
+    tags.appendChild(cd);
+    if (data.cap_fen) tags.appendChild(el('span', 'tag', '每人 ≤ ' + yuan(data.cap_fen)));
+    elHead.appendChild(tags);
     tickCountdown();
   }
   function tickCountdown() {
@@ -110,22 +110,27 @@
   function renderList() {
     clear(elList);
     var box = el('div', 'box');
-    var top = el('div', 'row');
+    var top = el('div', 'row head');
     top.appendChild(el('b', null, '接龙（' + data.count + ' 人）'));
     top.appendChild(el('span', 'muted', '合计 ' + yuan(data.total_fen)));
     box.appendChild(top);
-    if (!data.entries.length) box.appendChild(el('p', 'muted', '还没有人，来第一个吧'));
+    if (!data.entries.length) box.appendChild(el('p', 'muted empty', '还没有人，来第一个吧'));
     data.entries.forEach(function (e) {
       var isMine = mine && mine.id === e.id;
       var row = el('div', 'entry' + (isMine ? ' mine' : ''));
-      row.appendChild(el('span', 'who', e.seq + ' ' + e.name));
+      row.appendChild(el('i', 'seq', String(e.seq)));
+      var body = el('div', 'body');
+      var who = el('div', 'who', e.name);
+      if (isMine) who.appendChild(el('span', 'me', '我'));
+      body.appendChild(who);
       var what = el('div', 'what');
       what.appendChild(document.createTextNode(e.items.map(function (r) {
         return r.name + (r.qty > 1 ? ' ×' + r.qty : '');
       }).join(' + ')));
       if (e.note) what.appendChild(el('div', 'note', '备注：' + e.note));
-      row.appendChild(what);
-      row.appendChild(el('span', null, yuan(e.subtotal_fen)));
+      body.appendChild(what);
+      row.appendChild(body);
+      row.appendChild(el('span', 'amt', yuan(e.subtotal_fen)));
       box.appendChild(row);
     });
     elList.appendChild(box);
@@ -134,7 +139,7 @@
   function renderClosed() {
     clear(elClosed);
     if (isOpen()) return;
-    var box = el('div', 'box banner');
+    var box = el('div', 'box state');
     var st = data.state;
     var msg;
     if (st === 'ordered') {
@@ -153,11 +158,11 @@
     if (!isOpen()) return;
     var mineEntry = myEntry();
     if (mineEntry && !editing) {
-      var box = el('div', 'box');
+      var box = el('div', 'box mine-box');
       box.appendChild(el('div', null, '你已加入：' + mineEntry.items.map(function (r) {
         return r.name + (r.qty > 1 ? ' ×' + r.qty : '');
       }).join(' + ') + '（' + yuan(mineEntry.subtotal_fen) + '）'));
-      var acts = el('div'); acts.style.marginTop = '8px';
+      var acts = el('div', 'acts');
       var b1 = el('button', 'btn2', '修改'); b1.type = 'button';
       b1.onclick = function () { startEdit(mineEntry); };
       var b2 = el('button', 'btn2', '撤回我的'); b2.type = 'button';
@@ -173,27 +178,37 @@
   }
 
   function buildComposer() {
-    var box = el('div', 'box');
+    var box = el('div', 'box composer');
     elName = el('input'); elName.type = 'text'; elName.placeholder = '你的名字'; elName.maxLength = 20;
     elName.value = nameVal;
     elName.oninput = function () { nameVal = elName.value; };
     box.appendChild(elName);
-    elTabs = el('div', 'tabs'); box.appendChild(elTabs);
-    elItems = el('div'); box.appendChild(elItems);
+    var menu = el('div', 'menu');
+    elTabs = el('div', 'tabs'); menu.appendChild(elTabs);
+    elItems = el('div', 'items'); menu.appendChild(elItems);
+    box.appendChild(menu);
     elNote = el('input'); elNote.type = 'text'; elNote.placeholder = '备注（例：不要酱；大家都能看到，不会发给麦当劳）'; elNote.maxLength = 40;
     elNote.value = noteVal;
     elNote.oninput = function () { noteVal = elNote.value; };
-    elNote.style.marginTop = '6px';
     box.appendChild(elNote);
     elSel = el('div', 'sel'); box.appendChild(elSel);
-    elBtn = el('button', 'btn'); elBtn.type = 'button'; elBtn.onclick = submit;
-    box.appendChild(elBtn);
     if (editing) {
-      var c = el('button', 'btn2', '取消修改'); c.type = 'button'; c.style.marginTop = '8px';
+      var c = el('button', 'btn2', '取消修改'); c.type = 'button';
       c.onclick = function () { editing = false; errMsg = ''; cart = {}; renderOrder(); };
       box.appendChild(c);
     }
-    elErr = el('div', 'err'); box.appendChild(elErr);
+    // floating cart bar: total on the left, submit on the right
+    var bar = el('div', 'cartbar');
+    elErr = el('div', 'err'); bar.appendChild(elErr);
+    var pill = el('div', 'pill');
+    var sum = el('div', 'sum');
+    elSumAmt = el('b', null); elSumTip = el('span', null);
+    sum.appendChild(elSumAmt); sum.appendChild(elSumTip);
+    pill.appendChild(sum);
+    elBtn = el('button', 'go'); elBtn.type = 'button'; elBtn.onclick = submit;
+    pill.appendChild(elBtn);
+    bar.appendChild(pill);
+    box.appendChild(bar);
     elOrder.appendChild(box);
     renderTabs(); renderItems(); renderBtn();
   }
@@ -202,7 +217,10 @@
     clear(elTabs);
     data.menu.categories.forEach(function (c, i) {
       var t = el('span', 'tab' + (i === tabIdx ? ' on' : ''), c.name);
-      t.onclick = function () { tabIdx = i; renderTabs(); renderItems(); };
+      var n = 0;
+      c.codes.forEach(function (code) { n += cart[code] || 0; });
+      if (n > 0) t.appendChild(el('i', 'badge', String(n)));
+      t.onclick = function () { tabIdx = i; renderTabs(); renderItems(); elItems.scrollTop = 0; };
       elTabs.appendChild(t);
     });
   }
@@ -221,8 +239,10 @@
         img.src = it.image;
         row.appendChild(img);
       }
-      row.appendChild(el('span', 'nm', it.name));
-      row.appendChild(el('span', 'pr', yuan(it.price_fen)));
+      var info = el('div', 'info');
+      info.appendChild(el('span', 'nm', it.name));
+      var foot = el('div', 'foot');
+      foot.appendChild(el('span', 'pr', yuan(it.price_fen)));
       var q = el('span', 'qty');
       var n = cart[code] || 0;
       if (n > 0) {
@@ -235,14 +255,16 @@
       plus.disabled = n >= 10;
       plus.onclick = function () { setQty(code, n + 1); };
       q.appendChild(plus);
-      row.appendChild(q);
+      foot.appendChild(q);
+      info.appendChild(foot);
+      row.appendChild(info);
       elItems.appendChild(row);
     });
   }
   function setQty(code, n) {
     if (n <= 0) delete cart[code]; else cart[code] = Math.min(n, 10);
     errMsg = '';
-    renderItems(); renderBtn();
+    renderTabs(); renderItems(); renderBtn();
   }
   function renderSel() {
     var parts = cartItems().map(function (r) {
@@ -256,9 +278,14 @@
     var total = cartTotal();
     var has = cartItems().length > 0;
     var over = data.cap_fen && total > data.cap_fen;
+    var count = 0;
+    cartItems().forEach(function (r) { count += r.qty; });
     elBtn.disabled = busy || !has || !!over;
-    elBtn.textContent = over ? '超过每人上限 ' + yuan(data.cap_fen)
-      : (editing ? '保存修改（' : '加入接龙（') + yuan(total) + '）';
+    elBtn.textContent = busy ? '提交中…' : (editing ? '保存修改' : '加入接龙');
+    elSumAmt.textContent = yuan(total);
+    elSumTip.textContent = over ? '超过每人上限 ' + yuan(data.cap_fen)
+      : (has ? '已选 ' + count + ' 件' : (data.cap_fen ? '每人上限 ' + yuan(data.cap_fen) : '还没选餐'));
+    elSumTip.className = over ? 'over' : '';
     elErr.textContent = errMsg;
   }
 
